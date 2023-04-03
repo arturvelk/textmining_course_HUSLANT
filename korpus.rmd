@@ -1,0 +1,176 @@
+---
+title: "Korpusz példák"
+author: "Slant poetry"
+date: "2023-04-03"
+output: html_document
+---
+# Packages - not included
+```{r, include = FALSE}
+library(arrow)
+library(dplyr)
+
+library(HunMineR)
+library(readtext)
+library(lubridate)
+library(stringr)
+library(ggplot2)
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+library(GGally)
+library(ggdendro)
+library(tidytext)
+library(plotly)
+```
+
+# Újságok - telex, origo, 24.hu
+```{r}
+ujsag_data <- read_parquet("./texts/text_as_data/teljes_ujsag_text.parquet")
+custom_stopwords <- HunMineR::data_stopwords_extra
+```
+
+
+## 3 corpuses
+```{r}
+corpus_telex_relevant <- ujsag_data %>% filter(ujsag == "telex") %>% filter(text_contains == TRUE)
+corpus_telex <- corpus(corpus_telex_relevant$text)
+
+corpus_origo_relevant <- ujsag_data %>% filter(ujsag == "origo") %>% filter(text_contains == TRUE)
+corpus_origo <- corpus(corpus_origo_relevant$text)
+
+corpus_24hu_relevant <- ujsag_data %>% filter(ujsag == "24.hu") %>% filter(text_contains == TRUE)
+corpus_24hu <- corpus(corpus_24hu_relevant$text)
+```
+
+```{r}
+summary(corpus_telex)
+```
+
+## texstat_collocations
+```{r}
+corpus_telex %>%
+  tokens() %>%
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>%
+  tokens_select(pattern = c("másolás"), selection = "remove") %>% 
+  textstat_collocations(
+    size = 2,
+    min_count = 6
+  ) %>%
+  head(n = 10)
+```
+
+```{r}
+corpus_24hu %>%
+  tokens() %>%
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>%
+  tokens_select(pattern = c("másolás"), selection = "remove") %>% 
+  textstat_collocations(
+    size = 2,
+    min_count = 6
+  ) %>%
+  head(n = 10)
+```
+
+```{r}
+corpus_origo %>%
+  tokens() %>%
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>%
+  tokens_select(pattern = c("másolás"), selection = "remove") %>% 
+  textstat_collocations(
+    size = 2,
+    min_count = 6
+  ) %>%
+  head(n = 10)
+```
+
+## DFM creations for the wordcloud
+```{r}
+corpus_24hu_2 <- corpus_24hu %>% 
+  tokens(remove_punct = TRUE) %>% 
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>% 
+  tokens_select(pattern = c("másolás"), selection = "remove")
+
+hu24_dfm <- dfm(corpus_24hu_2)
+hu24_dfm <- dfm_trim(hu24_dfm, min_termfreq = 500)
+
+
+corpus_telex_2 <- corpus_telex %>% 
+  tokens(remove_punct = TRUE) %>% 
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>% 
+  tokens_select(pattern = c("másolás"), selection = "remove")
+
+telex_dfm <- dfm(corpus_telex_2)
+telex_dfm <- dfm_trim(telex_dfm, min_termfreq = 500)
+
+corpus_origo_2 <- corpus_origo %>% 
+  tokens(remove_punct = TRUE) %>% 
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>% 
+  tokens_select(pattern = c("másolás"), selection = "remove")
+
+origo_dfm <- dfm(corpus_origo_2)
+origo_dfm <- dfm_trim(origo_dfm, min_termfreq = 500)
+```
+
+## wordclouds
+### 24.hu
+```{r}
+textplot_wordcloud(hu24_dfm, min_count = 1000, color = "red")
+```
+
+### telex
+```{r}
+textplot_wordcloud(telex_dfm, min_count = 1000, color = "red")
+```
+
+### origo
+```{r}
+textplot_wordcloud(origo_dfm, min_count = 1000, color = "red")
+```
+
+* these indicate that more in depth stopword removal will be necessary in order to analyze the data in the general analysis, however to my knowledge, for the slant analysis this is not necessarily needed.
+
+## resetting the environment
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+
+# MZP speech - video data
+```{r}
+beszed_data <- read_parquet("./texts/text_as_data/fifty_percent_mzp_speech_data.parquet")
+custom_stopwords <- HunMineR::data_stopwords_extra
+corpus_mzp <- corpus(beszed_data$text)
+```
+
+## texstat_collocations
+```{r}
+corpus_mzp %>%
+  tokens() %>%
+  tokens_select(pattern = custom_stopwords, selection = "remove") %>%
+  tokens_select(pattern = c("másolás"), selection = "remove") %>% 
+  textstat_collocations(
+    size = 3,
+    min_count = 6
+  ) %>%
+  head(n = 10)
+
+```
+
+
+## DFM creation for wordcloud
+```{r}
+tokens_mzp <- corpus_mzp %>% 
+tokens(remove_punct = TRUE) %>% 
+tokens_select(pattern = custom_stopwords, selection = "remove")
+
+
+mzp_dfm <- dfm(tokens_mzp)
+mzp_dfm <- dfm_trim(mzp_dfm, min_termfreq = 25)
+```
+
+## Wordcloud MZP
+```{r}
+textplot_wordcloud(mzp_dfm, min_count = 50, color = "red")
+```
+
+* This also indicates a more in depth need to remove stopwords more precisely, however because of the sample size, i do not yet want to do this, in the coming week this will be happening.
