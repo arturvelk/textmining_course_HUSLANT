@@ -6,4 +6,4 @@ The data acquisiton folder contains the scraping scripts and the video conversio
 The corpus creation ipynb contains the code which transformed and merged the datas of the three different media portals and the joining of the text data of the audio files.
 
 ## Main
-here the corpus.r file contains the raw version of the corpus demosntration and the rmd and html contain a leaner version.
+Here the corpus.r file contains the raw version of the corpus demosntration and the rmd and html contain a leaner version.
